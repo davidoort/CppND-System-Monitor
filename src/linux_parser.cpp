@@ -69,7 +69,7 @@ vector<int> LinuxParser::Pids() {
 }
 
 // Read and return the system memory utilization: the fraction of used memory
-float LinuxParser::MemoryUtilization() { 
+float LinuxParser::MemoryUtilization() {
   float total_memory{0.0f}, free_memory{0.0f};
   string line, key, value;
   std::ifstream stream(kProcDirectory + kMeminfoFilename);
@@ -81,12 +81,12 @@ float LinuxParser::MemoryUtilization() {
           total_memory = std::stof(value);
         } else if (key == "MemFree:") {
           free_memory = std::stof(value);
-          return (total_memory - free_memory)/total_memory;
+          return (total_memory - free_memory) / total_memory;
         }
-      } 
+      }
     }
   }
-  return 0.0; 
+  return 0.0;
 }
 
 // Read and return the system uptime
@@ -103,18 +103,48 @@ long LinuxParser::UpTime() {
   return 0;
 }
 
-// TODO: Read and return the number of jiffies for the system
-long LinuxParser::Jiffies() { return 0; }
+// Read and return all the jiffies for the system in a struct
+void LinuxParser::JiffiesReader(Jiffy &jiffies) {
+  // long user, nice, system, idle, iowait, irq, softirq, steal, guest,
+  // guest_nice;
+  string line, a;
+  std::ifstream stream(kProcDirectory + kStatFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    // std::cout << line << std::endl;
+    linestream >> a >> jiffies.user >> jiffies.nice >> jiffies.system >>
+        jiffies.idle >> jiffies.iowait >> jiffies.irq >> jiffies.softirq >>
+        jiffies.steal >> jiffies.guest >> jiffies.guest_nice;
+  }
+}
+
+// // Read and return the number of jiffies for the system
+// long LinuxParser::Jiffies() {
+//   return LinuxParser::ActiveJiffies() + LinuxParser::IdleJiffies();
+// }
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::ActiveJiffies(int pid [[maybe_unused]]) { return 0; }
 
-// TODO: Read and return the number of active jiffies for the system
-long LinuxParser::ActiveJiffies() { return 0; }
+// Read and return the number of active jiffies for the system
+long LinuxParser::ActiveJiffies() {
+  // from Stack Overflow post: NonIdle = user + nice + system + irq + softirq +
+  // steal
+  Jiffy jiffies{};
+  JiffiesReader(jiffies);
+  // std::cout << "Active jiffies: " <<  jiffies.user + jiffies.nice + jiffies.system + jiffies.irq + jiffies.softirq + jiffies.steal << std::endl;
+  return jiffies.user + jiffies.nice + jiffies.system + jiffies.irq + jiffies.softirq + jiffies.steal;
+}
 
-// TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
+// Read and return the number of idle jiffies for the system
+long LinuxParser::IdleJiffies() { 
+  // from Stack Overflow post: Idle = idle + iowait
+  Jiffy jiffies{}; 
+  JiffiesReader(jiffies);
+  return jiffies.idle + jiffies.iowait;
+}
 
 // TODO: Read and return CPU utilization
 vector<string> LinuxParser::CpuUtilization() { return {}; }

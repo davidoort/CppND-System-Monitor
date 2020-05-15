@@ -68,8 +68,26 @@ vector<int> LinuxParser::Pids() {
   return pids;
 }
 
-// TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+// Read and return the system memory utilization: the fraction of used memory
+float LinuxParser::MemoryUtilization() { 
+  float total_memory{0.0f}, free_memory{0.0f};
+  string line, key, value;
+  std::ifstream stream(kProcDirectory + kMeminfoFilename);
+  if (stream.is_open()) {
+    while (std::getline(stream, line)) {
+      std::istringstream linestream(line);
+      if (linestream >> key >> value) {
+        if (key == "MemTotal:") {
+          total_memory = std::stof(value);
+        } else if (key == "MemFree:") {
+          free_memory = std::stof(value);
+          return (total_memory - free_memory)/total_memory;
+        }
+      } 
+    }
+  }
+  return 0.0; 
+}
 
 // Read and return the system uptime
 long LinuxParser::UpTime() {
@@ -79,13 +97,8 @@ long LinuxParser::UpTime() {
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    try {
-      linestream >> uptime;
-      return uptime;
-    } catch (...) {
-      std::cout << "Something went wrong, uptime is: " << uptime << std::endl;
-      return 0;
-    }
+    linestream >> uptime;
+    return uptime;
   }
   return 0;
 }
@@ -116,14 +129,8 @@ int LinuxParser::TotalProcesses() {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
         if (key == "processes") {
-          try {
-            processes = std::stoi(value);
-            return processes;
-          } catch (...) {
-            std::cout << "Something went wrong, value is: " << value
-                      << std::endl;
-            return 0;
-          }
+          processes = std::stoi(value);
+          return processes;
         }
       }
     }
@@ -141,16 +148,8 @@ int LinuxParser::RunningProcesses() {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
         if (key == "procs_running") {
-          try {
-            processes = std::stoi(value);
-            return processes;
-          } catch (...) {
-            // TODO: this will show up in the application window and will not be
-            // nice for the user
-            std::cout << "Something went wrong, value is: " << value
-                      << std::endl;
-            return 0;
-          }
+          processes = std::stoi(value);
+          return processes;
         }
       }
     }

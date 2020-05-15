@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 
 #include "format.h"
 
@@ -12,9 +13,14 @@ string Format::ElapsedTime(long seconds) {
     int mm{0};
     int ss{0};
 
-    hh = static_cast<int>(seconds/60.0);
-    mm = static_cast<int>(seconds/(60.0*60.0));
-    ss = seconds % (60*60);
+
+    std::cout << seconds << std::endl;
+
+    hh = static_cast<int>(seconds/3600.0);
+    int remainder_seconds = static_cast<int>(seconds) % hh;
+    std::cout << remainder_seconds << std::endl;
+    mm = static_cast<int>(remainder_seconds/(60.0));
+    ss = remainder_seconds % mm;
 
     string output = StringTime(hh) + ":" + StringTime(mm) + ":" + StringTime(ss);
     return output; 

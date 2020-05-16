@@ -41,7 +41,7 @@ enum CPUStates {
   kGuestNice_
 };
 
-struct Jiffy {
+struct SystemJiffies {
   long user;
   long nice;
   long system;
@@ -55,7 +55,7 @@ struct Jiffy {
 };
 
 std::vector<std::string> CpuUtilization();
-void JiffiesReader(Jiffy &jiffies);
+void SystemJiffiesReader(SystemJiffies &jiffies);
 long Jiffies();
 long ActiveJiffies();
 long ActiveJiffies(int pid);

@@ -104,7 +104,7 @@ long LinuxParser::UpTime() {
 }
 
 // Read and return all the jiffies for the system in a struct
-void LinuxParser::JiffiesReader(Jiffy& jiffies) {
+void LinuxParser::SystemJiffiesReader(SystemJiffies& jiffies) {
   // long user, nice, system, idle, iowait, irq, softirq, steal, guest,
   // guest_nice;
   string line, a;
@@ -112,31 +112,38 @@ void LinuxParser::JiffiesReader(Jiffy& jiffies) {
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    // std::cout << line << std::endl;
     linestream >> a >> jiffies.user >> jiffies.nice >> jiffies.system >>
         jiffies.idle >> jiffies.iowait >> jiffies.irq >> jiffies.softirq >>
         jiffies.steal >> jiffies.guest >> jiffies.guest_nice;
   }
 }
 
-// // Read and return the number of jiffies for the system
-// long LinuxParser::Jiffies() {
-//   return LinuxParser::ActiveJiffies() + LinuxParser::IdleJiffies();
-// }
-
-// TODO: Read and return the number of active jiffies for a PID
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid [[maybe_unused]]) { return 0; }
+// Read and return the number of active jiffies (in clock ticks) for a PID
+long LinuxParser::ActiveJiffies(int pid) {
+  // From Stack Overflow post:
+  // https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat/16736599#16736599
+  // active jiffies = utime + stime + cutime + cstime
+  const int indx = 13;
+  string line, buffer;
+  long utime, stime, cutime, cstime;  // expressed in clock ticks
+  std::ifstream stream(kProcDirectory + to_string(pid) + kStatFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    for (int i = 0; i < indx; i++) {
+      linestream >> buffer;
+    }
+    linestream >> utime >> stime >> cutime >> cstime;
+    return utime + stime + cutime + cstime;
+  }
+}
 
 // Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() {
   // from Stack Overflow post: NonIdle = user + nice + system + irq + softirq +
   // steal
-  Jiffy jiffies{};
-  JiffiesReader(jiffies);
-  // std::cout << "Active jiffies: " <<  jiffies.user + jiffies.nice +
-  // jiffies.system + jiffies.irq + jiffies.softirq + jiffies.steal <<
-  // std::endl;
+  SystemJiffies jiffies{};
+  SystemJiffiesReader(jiffies);
   return jiffies.user + jiffies.nice + jiffies.system + jiffies.irq +
          jiffies.softirq + jiffies.steal;
 }
@@ -144,13 +151,13 @@ long LinuxParser::ActiveJiffies() {
 // Read and return the number of idle jiffies for the system
 long LinuxParser::IdleJiffies() {
   // from Stack Overflow post: Idle = idle + iowait
-  Jiffy jiffies{};
-  JiffiesReader(jiffies);
+  SystemJiffies jiffies{};
+  SystemJiffiesReader(jiffies);
   return jiffies.idle + jiffies.iowait;
 }
 
-// TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+// // Read and return CPU utilization
+// vector<string> LinuxParser::CpuUtilization() { return {}; }
 
 // Read and return the total number of processes
 int LinuxParser::TotalProcesses() {
@@ -215,7 +222,7 @@ string LinuxParser::Ram(int pid) {
     }
   }
   // TODO: figure out why this line is reached
-  // std::cout << "Don't print: " << std::endl;
+  // std::cout << "Don't print" << std::endl;
 
   // return 0;
 }
@@ -244,8 +251,6 @@ string LinuxParser::User(int pid) {
   std::ifstream stream(kPasswordPath);
   if (stream.is_open()) {
     while (std::getline(stream, line)) {
-      // TODO: check if this is necessary or if the string stream is split
-      // automatically by :
       std::replace(line.begin(), line.end(), ':', ' ');
       std::replace(line.begin(), line.end(), 'x', ' ');
       std::istringstream linestream(line);

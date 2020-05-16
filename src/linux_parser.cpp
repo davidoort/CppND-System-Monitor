@@ -191,7 +191,7 @@ int LinuxParser::RunningProcesses() {
 }
 
 // Read and return the command associated with a process
-string LinuxParser::Command(int pid) { 
+string LinuxParser::Command(int pid) {
   string command;
   std::ifstream stream(kProcDirectory + to_string(pid) + kCmdlineFilename);
   if (stream.is_open()) {
@@ -200,9 +200,25 @@ string LinuxParser::Command(int pid) {
   }
 }
 
-// TODO: Read and return the memory used by a process
-// REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Ram(int pid [[maybe_unused]]) { return string(); }
+// Read and return the memory used by a process in kB
+string LinuxParser::Ram(int pid) {
+  string line, key, ram;
+  std::ifstream stream(kProcDirectory + to_string(pid) + kStatusFilename);
+  if (stream.is_open()) {
+    while (std::getline(stream, line)) {
+      std::istringstream linestream(line);
+      while (linestream >> key >> ram) {
+        if (key == "VmSize:") {
+          return ram;
+        }
+      }
+    }
+  }
+  // TODO: figure out why this line is reached
+  // std::cout << "Don't print: " << std::endl;
+
+  // return 0;
+}
 
 // Read and return the user ID associated with a process
 string LinuxParser::Uid(int pid) {
@@ -228,7 +244,8 @@ string LinuxParser::User(int pid) {
   std::ifstream stream(kPasswordPath);
   if (stream.is_open()) {
     while (std::getline(stream, line)) {
-      // TODO: check if this is necessary or if the string stream is split automatically by :
+      // TODO: check if this is necessary or if the string stream is split
+      // automatically by :
       std::replace(line.begin(), line.end(), ':', ' ');
       std::replace(line.begin(), line.end(), 'x', ' ');
       std::istringstream linestream(line);

@@ -19,7 +19,6 @@ using std::vector;
 // Return the system's CPU
 Processor& System::Cpu() { return cpu_; }
 
-// TODO: remove unused processes
 vector<Process>& System::Processes() {
   auto pids = LinuxParser::Pids();
   // Clear processes in processes_ that have an id which does not exist in pids

@@ -17,7 +17,7 @@ using std::vector;
 int Process::Pid() { return pid_; }
 
 // Return this process's CPU utilization as a fraction
-float Process::CpuUtilization() const {
+float Process::CpuUtilization() {
   // From Stack overflow post:
   // https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat/16736599#16736599
   // seconds = uptime - (starttime / Hertz)
@@ -25,6 +25,7 @@ float Process::CpuUtilization() const {
   long seconds = UpTime();
   float cpuutilization =
       (LinuxParser::ActiveJiffies(pid_) / sysconf(_SC_CLK_TCK)) / static_cast<float>(seconds);
+  cpu_util_ = cpuutilization;
   return cpuutilization;
 }
 
@@ -46,7 +47,7 @@ long int Process::UpTime() const { return LinuxParser::UpTime(pid_); }
 
 // Overload the "less than" comparison operator for Process objects
 bool Process::operator<(Process const& a) const {
-  if (a.CpuUtilization() < this->CpuUtilization()) {
+  if (a.cpu_util_ < this->cpu_util_) {
     return true;
   }
   return false;

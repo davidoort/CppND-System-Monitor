@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-// Return the aggregate CPU utilization
+// Return the aggregate CPU utilization. float has less precision than double. Keep this in mind.
 float Processor::Utilization() {
   long idle = LinuxParser::IdleJiffies();
 //   std::cout << "Idle: " << idle << std::endl;

@@ -34,8 +34,8 @@ vector<Process>& System::Processes() {
             processes_.begin(), processes_.end(),
             [pid](const Process& proc) -> bool { return proc.Pid() == pid; }) == processes_.end()) {
       // If the process with id pid does not exist, add it to the list of
-      // processes
-      processes_.push_back(Process(pid));
+      // processes. Emplace back is more efficient that push_back apparently.
+      processes_.emplace_back(Process(pid));
     }
   }
   std::sort(processes_.begin(), processes_.end());

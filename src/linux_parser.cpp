@@ -136,6 +136,7 @@ long LinuxParser::ActiveJiffies(int pid) {
     linestream >> utime >> stime >> cutime >> cstime;
     return utime + stime + cutime + cstime;
   }
+  return 0;
 }
 
 // Read and return the number of active jiffies for the system
@@ -203,8 +204,8 @@ string LinuxParser::Command(int pid) {
   std::ifstream stream(kProcDirectory + to_string(pid) + kCmdlineFilename);
   if (stream.is_open()) {
     std::getline(stream, command);
-    return command;
   }
+  return command;
 }
 
 // Read and return the memory used by a process in kB
@@ -224,7 +225,7 @@ string LinuxParser::Ram(int pid) {
   // TODO: figure out why this line is reached
   // std::cout << "Don't print" << std::endl;
 
-  // return 0;
+  return 0;
 }
 
 // Read and return the user ID associated with a process
@@ -241,7 +242,7 @@ string LinuxParser::Uid(int pid) {
       }
     }
   }
-  return 0;
+  return uid;
 }
 
 // Read and return the user associated with a process
@@ -261,7 +262,7 @@ string LinuxParser::User(int pid) {
       }
     }
   }
-  return 0;
+  return username;
 }
 
 // Read and return the uptime of a process
@@ -280,4 +281,5 @@ long LinuxParser::UpTime(int pid) {
     long system_uptime = LinuxParser::UpTime();
     return system_uptime - proc_starttime;
   }
+  return 0;
 }
